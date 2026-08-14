@@ -1,0 +1,33 @@
+# Виртуальное окружение Python
+venv/
+env/
+.venv/
+
+# Кэш Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Pytest
+.pytest_cache/
+
+# Allure
+allure-results/
+allure-report/
+
+# Скриншоты и логи (опционально - можно и оставить)
+screenshots/
+*.log
+
+# Файлы с секретами
+.env
+.env.local
+*.secret
+credentials.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
