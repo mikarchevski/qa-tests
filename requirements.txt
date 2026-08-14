@@ -1,0 +1,4 @@
+pytest
+playwright
+allure-pytest
+pytest-playwright
