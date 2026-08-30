@@ -5,7 +5,7 @@ import allure
 from playwright.sync_api import Page
 
 # Читаем из переменных окружения, иначе используем дефолтные значения
-BASE_URL = os.getenv("APP_URL", "https://benx-share.duckdns.org")
+BASE_URL = os.getenv("APP_URL", "httpS://disk.mk5d.ru")
 TEST_USERNAME = os.getenv("TEST_USERNAME", "test_user_qa")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "TestPassword123!")
 
