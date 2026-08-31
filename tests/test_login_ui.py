@@ -8,7 +8,7 @@ from conftest import BASE_URL, TEST_USERNAME, TEST_PASSWORD
 @allure.story("Успешный вход в систему")
 def test_simple_login(page_with_login: Page):
     """Тест: ввести логин/пароль, нажать Войти и проверить результат"""
-    
+    print(f"\n[DEBUG] Отправляю: USER='{TEST_USERNAME}', PASS='{TEST_PASSWORD}'")
     with allure.step("Вводим корректные учетные данные"):
         page_with_login.fill("[data-testid='username-input']", TEST_USERNAME)
         page_with_login.fill("[data-testid='password-input']", TEST_PASSWORD)
