@@ -50,104 +50,72 @@ class TestFileUpload:
 
         # 7. Проверяем, что файл появился в основной сетке файлов
         file_card = page.locator(".file-card").filter(has_text=file_name)
+        file_card = page.locator(".file-card").filter(has_text=file_name)
+
+    def test_upload_multiple_files(self, authenticated_page: Page, multiple_files, cleanup_uploaded_files):
+        """Загрузка нескольких файлов одновременно"""
+        page = authenticated_page
+
+        page.locator("[data-testid='upload-file-btn']").click()
+
+        page.wait_for_timeout(300)
+
+        file_input = page.locator("[data-testid='file-input']")
+        file_input.set_input_files([str(f) for f in multiple_files])
+
+        # Проверяем, что все 3 файла появились в панели загрузок
+        upload_items = page.locator(".upload-item")
+        expect(upload_items).to_have_count(3, timeout=10000)
+
+        # Ждём, пока все загрузятся
+        for file in multiple_files:
+            item = page.locator(".upload-item").filter(has_text=file.stem)
+            expect(item).to_contain_text("Готово", timeout=30000)
+
+    def test_upload_folder(self, authenticated_page: Page, tmp_path, cleanup_uploaded_files):
+        """Загрузка папки через folderInput"""
+        page = authenticated_page
+
+        # Создаём структуру папки
+        test_folder = tmp_path / "test_folder"
+        test_folder.mkdir()
+        (test_folder / "file1.txt").write_text("content 1")
+        (test_folder / "file2.txt").write_text("content 2")
+
+        page.locator("[data-testid='upload-folder-btn']").click()
+        page.wait_for_timeout(300)
+
+        folder_input = page.locator("[data-testid='folder-input']")
+        folder_input.set_input_files(str(test_folder))
+
+        # Проверяем, что папка появилась в панели загрузок
+        folder_item = page.locator(".upload-item").filter(has_text="test_folder")
+        expect(folder_item).to_be_visible(timeout=10000)
+
+        # Ждём завершения загрузки папки
+        expect(folder_item).to_contain_text("Готово", timeout=15000)
+
+        file_card = page.locator(".file-card").filter(has_text="test_folder")
         expect(file_card).to_be_visible(timeout=10000)
 
-    # def test_upload_multiple_files(self, authenticated_page: Page, multiple_files):
-    #     """Загрузка нескольких файлов одновременно"""
-    #     page = authenticated_page
+    def test_upload_duplicate_file(self, authenticated_page: Page, temp_file, cleanup_uploaded_files):
+        """Повторная загрузка того же файла"""
+        page = authenticated_page
 
-    #     page.locator("[data-testid='upload-file-btn']").click()
+        # Первая загрузка
+        page.locator("[data-testid='upload-file-btn']").click()
+        page.wait_for_timeout(300)
+        page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
 
-    #     file_input = page.locator("[data-testid='file-input']")
-    #     file_input.set_input_files([str(f) for f in multiple_files])
+        first_item = page.locator(".upload-item").filter(has_text="test_upload").first
+        expect(first_item).to_contain_text("Готово", timeout=1000)
 
-    #     # Проверяем, что все 3 файла появились в панели загрузок
-    #     upload_items = page.locator(".upload-item")
-    #     expect(upload_items).to_have_count(3, timeout=10000)
+        page.wait_for_timeout(300)
 
-    #     # Ждём, пока все загрузятся
-    #     for file in multiple_files:
-    #         item = page.locator(".upload-item").filter(has_text=file.stem)
-    #         expect(item).to_contain_text("Готово", timeout=30000)
+        # Вторая загрузка того же файла
+        page.locator("[data-testid='upload-file-btn']").click()
+        page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
 
-    # def test_cancel_upload(self, authenticated_page: Page, large_file):
-    #     """Тест отмены загрузки"""
-    #     page = authenticated_page
-
-    #     page.locator("[data-testid='upload-file-btn']").click()
-
-    #     file_input = page.locator("[data-testid='file-input']")
-    #     file_input.set_input_files(str(large_file))
-
-    #     # Ждём появления элемента загрузки
-    #     upload_item = page.locator(".upload-item").filter(has_text="large_file")
-    #     expect(upload_item).to_be_visible(timeout=5000)
-
-    #     # Находим кнопку отмены и кликаем
-    #     cancel_btn = upload_item.locator(".cancel-btn")
-    #     expect(cancel_btn).to_be_visible()
-    #     cancel_btn.click()
-
-    #     # Проверяем статус "Отменено" (текст зависит от вашего UI)
-    #     expect(upload_item).to_contain_text("Отмен", timeout=5000)
-
-    #     # Файл НЕ должен появиться в сетке
-    #     file_card = page.locator(".file-card").filter(has_text="large_file")
-    #     expect(file_card).not_to_be_visible(timeout=3000)
-
-    # def test_upload_folder(self, authenticated_page: Page, tmp_path):
-    #     """Загрузка папки через folderInput"""
-    #     page = authenticated_page
-
-    #     # Создаём структуру папки
-    #     test_folder = tmp_path / "test_folder"
-    #     test_folder.mkdir()
-    #     (test_folder / "file1.txt").write_text("content 1")
-    #     (test_folder / "file2.txt").write_text("content 2")
-
-    #     page.locator("[data-testid='upload-folder-btn']").click()
-
-    #     folder_input = page.locator("[data-testid='folder-input']")
-    #     folder_input.set_input_files(str(test_folder))
-
-    #     # Проверяем, что папка появилась в панели загрузок
-    #     folder_item = page.locator(".upload-item").filter(has_text="test_folder")
-    #     expect(folder_item).to_be_visible(timeout=5000)
-
-    #     # Ждём завершения загрузки папки
-    #     expect(folder_item).to_contain_text("Готово", timeout=30000)
-
-    # def test_upload_duplicate_file(self, authenticated_page: Page, temp_file):
-    #     """Повторная загрузка того же файла"""
-    #     page = authenticated_page
-
-    #     # Первая загрузка
-    #     page.locator("[data-testid='upload-file-btn']").click()
-    #     page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-
-    #     first_item = page.locator(".upload-item").filter(has_text="test_upload").first
-    #     expect(first_item).to_contain_text("Готово", timeout=30000)
-
-    #     # Вторая загрузка того же файла
-    #     page.locator("[data-testid='upload-file-btn']").click()
-    #     page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-
-    #     # Проверяем реакцию на дубликат (текст зависит от вашего UI)
-    #     second_item = page.locator(".upload-item").filter(has_text="test_upload").last
-    #     expect(second_item).to_contain_text("уже", timeout=30000)
-
-    # def test_upload_single_file(self, authenticated_page: Page, temp_file, cleanup_uploaded_files):
-    #     """Базовый тест: загрузка одного файла"""
-    #     page = authenticated_page
-    #     file_name = temp_file.name 
-
-    #     page.locator("[data-testid='upload-file-btn']").click()
-    #     page.wait_for_timeout(300)
-    #     page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-
-    #     upload_item = page.locator(".upload-item").filter(has_text=file_name)
-    #     expect(upload_item).to_be_visible(timeout=10000)
-    #     expect(upload_item).to_contain_text("Готово", timeout=15000)
-
-    #     file_card = page.locator(".file-card").filter(has_text=file_name)
-    #     expect(file_card).to_be_visible(timeout=10000)
+        # Проверяем реакцию на дубликат (текст зависит от вашего UI)
+        second_item = page.locator(".upload-item").filter(has_text="test_upload").first
+        expect(second_item).to_contain_text("Пропуск", timeout=1000)

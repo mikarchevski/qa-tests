@@ -1,12 +1,38 @@
 import pytest
+import subprocess
 from pathlib import Path
+from PIL import Image
 import tempfile
+
 
 @pytest.fixture
 def temp_file(tmp_path):
     """Создаёт временный файл для загрузки"""
     file = tmp_path / "test_upload.txt"
     file.write_text("Hello from Playwright test!")
+    return file
+
+@pytest.fixture
+def temp_img(tmp_path):
+    """Создаёт временную картинку для загрузки"""
+    file = tmp_path / "test_upload.png"
+    img = Image.new('RGB', (100, 100), color='red')
+    img.save(str(file), 'PNG')
+    return file
+
+@pytest.fixture
+def temp_video(tmp_path):
+    """Использует готовое видео из test_data/"""
+    test_data_dir = Path(__file__).parent / "test_data"
+    video_file = test_data_dir / "sample_video.mp4"    
+    return video_file
+
+@pytest.fixture
+def temp_img(tmp_path):
+    """Создаёт временный файл для загрузки"""
+    file = tmp_path / "test_upload.png"
+    img = Image.new('RGB', (100, 100), color='red')
+    img.save(str(file), 'PNG')
     return file
 
 @pytest.fixture
