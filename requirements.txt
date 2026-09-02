@@ -2,3 +2,5 @@ pytest
 playwright
 allure-pytest
 pytest-playwright
+python-dotenv
+Pillow
