@@ -2,8 +2,10 @@
 import os
 import pytest
 import allure
+import uuid
+import requests
 from dotenv import load_dotenv
-from playwright.sync_api import Page
+from playwright.sync_api import Page, expect
 from fixtures.upload import *  # noqa
 load_dotenv()
 # Читаем из переменных окружения, иначе используем дефолтные значения
@@ -11,7 +13,77 @@ BASE_URL = os.getenv("APP_URL", "http://127.0.0.1:5000")
 TEST_USERNAME = os.getenv("TEST_USERNAME", "test_user_qa")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "TestPassword123!")
 
+@pytest.fixture(scope="function")
+def test_users():
+    """
+    Создает двух уникальных тестовых пользователей перед тестом.
+    Автоматически обрабатывает CSRF-токены.
+    """
+    import re
+    base_url = os.getenv("APP_URL", "http://localhost:5000")
+    
+    # Генерируем уникальные имена, чтобы тесты не конфликтовали
+    user_a_name = f"test_alice_{uuid.uuid4().hex[:8]}"
+    user_b_name = f"test_bob_{uuid.uuid4().hex[:8]}"
+    password = "TestPassword123!"
+    
+    users = {
+        "user_a": {"username": user_a_name, "password": password},
+        "user_b": {"username": user_b_name, "password": password}
+    }
+    
+    # Используем Session для сохранения куки между запросами
+    session = requests.Session()
+    
+    for user_key, user_data in users.items():
+        # 1. GET /login — получаем страницу с CSRF-токеном
+        get_response = session.get(f"{base_url}/login")
+        assert get_response.status_code == 200, f"Не удалось загрузить страницу логина: {get_response.status_code}"
+        
+        # 2. Извлекаем CSRF-токен из HTML
+        # Flask-WTF обычно вставляет его как <input type="hidden" name="csrf_token" value="...">
+        match = re.search(
+            r'name="csrf_token"\s+value="([^"]+)"', 
+            get_response.text
+        )
+        if not match:
+            # Альтернативный вариант: токены иногда бывают в meta-тегах
+            match = re.search(
+                r'name="csrf-token"\s+content="([^"]+)"',
+                get_response.text
+            )
+        
+        assert match, "Не удалось найти CSRF-токен на странице логина. Проверьте HTML-код."
+        csrf_token = match.group(1)
+        
+        # 3. POST /login с CSRF-токеном и флагом регистрации
+        post_response = session.post(
+            f"{base_url}/login",
+            data={
+                "csrf_token": csrf_token,
+                "username": user_data["username"],
+                "password": user_data["password"],
+                "register": "1"
+            },
+            allow_redirects=False  # Не переходим на главную, остаёмся на логине
+        )
+        
+        # 302 = успешная регистрация и редирект на главную
+        if post_response.status_code not in [200, 302]:
+            pytest.fail(
+                f"Не удалось зарегистрировать {user_key}: "
+                f"{post_response.status_code} - {post_response.text[:500]}"
+            )
+        
+        # Если пользователь уже существует (302 тоже может быть, но на login с ошибкой),
+        # проверяем, что мы не остались на странице с ошибкой
+        if post_response.status_code == 200 and "уже существует" in post_response.text:
+            # Пользователь уже есть — это нормально, продолжаем
+            pass
+    
+    yield users
 
+    
 @pytest.fixture(scope="function")
 def page_with_login(page: Page):
     page.goto(f"{BASE_URL}/login")
