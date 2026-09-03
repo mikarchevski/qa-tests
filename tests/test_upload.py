@@ -120,4 +120,4 @@ class TestFileUpload:
 
         # Проверяем реакцию на дубликат (текст зависит от вашего UI)
         second_item = page.locator(".upload-item").filter(has_text="test_upload").first
-        expect(second_item).to_contain_text("Пропуск", timeout=1000)
+        expect(second_item).to_contain_text("уже загружен", timeout=1000)
