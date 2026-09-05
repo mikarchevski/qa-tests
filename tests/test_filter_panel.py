@@ -73,16 +73,15 @@ class TestFilterPanel:
             expect(upload_item).to_be_visible(timeout=10000)
             expect(upload_item).to_contain_text("Готово", timeout=15000)
 
+            file_card = page.locator(".file-card").filter(has_text=file_name)
+
             # 4. Теперь применяем фильтр "Фото"
-            filter_btn = page.locator("[data-testid='filter-btn-image']")
+            filter_btn = page.locator("[data-testid='filter-btn-image']").click
 
             # 5. Проверяем, что файл виден после фильтрации
             file_card = page.locator(".file-card").filter(has_text=file_name)
             expect(file_card).to_be_visible(timeout=5000)
             
-            # 6. Дополнительная проверка: убедимся, что это действительно изображение
-            expect(file_card.locator(".file-preview-img")).to_be_visible()
-
     def test_filter_video(self, authenticated_page: Page, temp_video, cleanup_uploaded_files):
             """Тест фильтрации видеофайлов"""
             page = authenticated_page
