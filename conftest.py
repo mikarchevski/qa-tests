@@ -9,13 +9,15 @@ from playwright.sync_api import Page, expect, Browser
 
 load_dotenv()
 
-if not os.environ.get('TESTING_MODE'):
-    os.environ['TESTING_MODE'] = 'true'
+# if not os.environ.get('TESTING_MODE'):
+#     os.environ['TESTING_MODE'] = 'true'
 # --- Конфигурация ---
 BASE_URL = os.getenv("APP_URL", "http://127.0.0.1:5000")
 TEST_USERNAME = os.getenv("TEST_USERNAME", "admin")
 TEST_PASSWORD = os.getenv("TEST_PASSWORD", "admin")
 AUTH_STATE_PATH = "auth.json"
+
+BYPASS_TOKEN = os.getenv("E2E_BYPASS_TOKEN", "")
 
 
 # --- ФИКСТУРЫ ДЛЯ АВТОРИЗАЦИИ ---
@@ -26,7 +28,12 @@ def auth_state(browser: Browser):
     Выполняет логин ОДИН раз на всю сессию тестов
     и сохраняет куки/токены в файл auth.json
     """
-    context = browser.new_context()
+    context_options = {}
+    if BYPASS_TOKEN:
+        context_options["extra_http_headers"] = {"X-E2E-Bypass-Token": BYPASS_TOKEN}
+        
+    context = browser.new_context(**context_options)
+
     page = context.new_page()
     
     page.goto(f"{BASE_URL}/login")
@@ -46,13 +53,15 @@ def auth_state(browser: Browser):
 
 @pytest.fixture(scope="session")
 def browser_context_args(browser_context_args, auth_state):
-    """
-    Автоматически загружает сохранённое состояние во ВСЕ браузерные контексты.
-    Теперь каждая новая страница уже авторизована.
-    """
+    # Добавляем заголовок во все остальные контексты тестов
+    extra_headers = {}
+    if BYPASS_TOKEN:
+        extra_headers["X-E2E-Bypass-Token"] = BYPASS_TOKEN
+        
     return {
         **browser_context_args,
         "storage_state": auth_state,
+        "extra_http_headers": extra_headers, 
     }
 
 
