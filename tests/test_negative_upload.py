@@ -7,22 +7,10 @@ load_dotenv()
 BASE_URL = os.getenv("APP_URL", "http://localhost:5000")
 
 
-@pytest.fixture(scope="function")
-def authenticated_page(page: Page):
-    """Авторизация перед тестом"""
-    page.goto(f"{BASE_URL}/login")
-    # ПРАВИЛЬНЫЕ селекторы (как в test_login_ui.py)
-    page.locator("[data-testid='username-input']").fill(os.getenv("TEST_USERNAME", "admin"))
-    page.locator("[data-testid='password-input']").fill(os.getenv("TEST_PASSWORD", "admin"))
-    page.locator("[data-testid='submit-btn']").click()
-    # Ждём, пока загрузится главная страница
-    expect(page.locator("[data-testid='files-list-container']")).to_be_visible(timeout=10000)
-    yield page
-
 class TestNegativeUpload:
     """Негативные сценарии загрузки файлов"""
 
-    def test_upload_empty_file(self, authenticated_page: Page, tmp_path, cleanup_uploaded_files):
+    def test_upload_empty_file(self, authenticated_page, tmp_path, cleanup_uploaded_files):
         """Проверка реакции системы на загрузку пустого файла"""
         page = authenticated_page
         empty_file = tmp_path / "empty_file.txt"
@@ -42,7 +30,7 @@ class TestNegativeUpload:
             upload_item = page.locator(".upload-item").filter(has_text="empty_file.txt")
             expect(upload_item).to_contain_text("Готово", timeout=10000)
 
-    def test_upload_file_with_special_chars(self, authenticated_page: Page, tmp_path, cleanup_uploaded_files):
+    def test_upload_file_with_special_chars(self, authenticated_page, tmp_path, cleanup_uploaded_files):
         """Загрузка файла с кириллицей, пробелами и спецсимволами"""
         page = authenticated_page
         weird_file = tmp_path / "файл с пробелами и #_@.txt"

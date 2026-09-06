@@ -7,22 +7,11 @@ load_dotenv()
 BASE_URL = os.getenv("APP_URL", "http://localhost:5000")
 
 
-@pytest.fixture(scope="function")
-def authenticated_page(page: Page):
-    """Авторизация перед тестом"""
-    page.goto(f"{BASE_URL}/login")
-    # ПРАВИЛЬНЫЕ селекторы (как в test_login_ui.py)
-    page.locator("[data-testid='username-input']").fill(os.getenv("TEST_USERNAME", "admin"))
-    page.locator("[data-testid='password-input']").fill(os.getenv("TEST_PASSWORD", "admin"))
-    page.locator("[data-testid='submit-btn']").click()
-    # Ждём, пока загрузится главная страница
-    expect(page.locator("[data-testid='files-list-container']")).to_be_visible(timeout=10000)
-    yield page
 
 
 class TestFileUpload:
     """Тесты загрузки файлов"""
-    def test_upload_single_file(self, authenticated_page: Page, temp_file, cleanup_uploaded_files):
+    def test_upload_single_file(self, authenticated_page, temp_file, cleanup_uploaded_files):
         """
         Базовый тест: загрузка одного файла.
         Работает напрямую с нативным <input type="file">, без клика по кастомной кнопке.
@@ -54,7 +43,7 @@ class TestFileUpload:
         file_card = page.locator(".file-card").filter(has_text=file_name)
         expect(file_card).to_be_visible(timeout=10000)
 
-    def test_upload_multiple_files(self, authenticated_page: Page, multiple_files, cleanup_uploaded_files):
+    def test_upload_multiple_files(self, authenticated_page, multiple_files, cleanup_uploaded_files):
         """Загрузка нескольких файлов одновременно"""
         page = authenticated_page
 
@@ -74,7 +63,7 @@ class TestFileUpload:
             item = page.locator(".upload-item").filter(has_text=file.stem)
             expect(item).to_contain_text("Готово", timeout=30000)
 
-    def test_upload_folder(self, authenticated_page: Page, tmp_path, cleanup_uploaded_files):
+    def test_upload_folder(self, authenticated_page, tmp_path, cleanup_uploaded_files):
         """Загрузка папки через folderInput"""
         page = authenticated_page
 
@@ -100,7 +89,7 @@ class TestFileUpload:
         file_card = page.locator(".file-card").filter(has_text="test_folder")
         expect(file_card).to_be_visible(timeout=10000)
 
-    def test_upload_duplicate_file(self, authenticated_page: Page, temp_file, cleanup_uploaded_files):
+    def test_upload_duplicate_file(self, authenticated_page, temp_file, cleanup_uploaded_files):
         """Повторная загрузка того же файла"""
         page = authenticated_page
 
