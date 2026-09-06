@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 import uuid
 from playwright.sync_api import Page, expect, Browser
 
+os.environ['TESTING_MODE'] = 'true'
 
 load_dotenv()
 # --- Конфигурация ---

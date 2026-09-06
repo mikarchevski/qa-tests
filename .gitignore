@@ -25,6 +25,7 @@ screenshots/
 .env.local
 *.secret
 credentials.json
+auth.json
 
 # IDE
 .vscode/
