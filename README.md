@@ -18,4 +18,6 @@ APP_URL=http://127.0.0.1:5000
 
 TEST_USERNAME=test_user_qa
 TEST_PASSWORD=TestPassword123!
+
+E2E_BYPASS_TOKEN= Секретный токен для обхода лимитов локально
 ```
