@@ -7,9 +7,10 @@ from dotenv import load_dotenv
 import uuid
 from playwright.sync_api import Page, expect, Browser
 
-os.environ['TESTING_MODE'] = 'true'
-
 load_dotenv()
+
+if not os.environ.get('TESTING_MODE'):
+    os.environ['TESTING_MODE'] = 'true'
 # --- Конфигурация ---
 BASE_URL = os.getenv("APP_URL", "http://127.0.0.1:5000")
 TEST_USERNAME = os.getenv("TEST_USERNAME", "admin")
