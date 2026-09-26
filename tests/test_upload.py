@@ -98,7 +98,7 @@ class TestFileUpload:
         page.wait_for_timeout(1000)
         page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
 
-        first_item = page.locator(".upload-item").filter(has_text="test_upload").first
+        first_item = page.locator(".upload-item").filter(has_text="test_upload").last
         expect(first_item).to_contain_text("Готово", timeout=1000)
 
         page.wait_for_timeout(1000)
