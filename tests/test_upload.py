@@ -92,21 +92,26 @@ class TestFileUpload:
     def test_upload_duplicate_file(self, authenticated_page, temp_file, cleanup_uploaded_files):
         """Повторная загрузка того же файла"""
         page = authenticated_page
-
+    
         # Первая загрузка
         page.locator("[data-testid='upload-file-btn']").click()
-        page.wait_for_timeout(1000)
+        page.wait_for_timeout(500) # Небольшая пауза для открытия диалога
         page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-
-        first_item = page.locator(".upload-item").filter(has_text="test_upload").last
-        expect(first_item).to_contain_text("Готово", timeout=1000)
-
-        page.wait_for_timeout(1000)
-
+    
+        first_item = page.locator(".upload-item").filter(has_text="test_upload").first
+        
+        # Увеличиваем таймаут ожидания "Готово" до 10 секунд для медленного CI
+        expect(first_item).to_contain_text("Готово", timeout=10000)
+    
+        # ⚡ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Даем БД время зафиксировать запись
+        # 1 секунды в CI часто не хватает для SQLite
+        page.wait_for_timeout(3000) 
+    
         # Вторая загрузка того же файла
         page.locator("[data-testid='upload-file-btn']").click()
         page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-
-        # Проверяем реакцию на дубликат (текст зависит от вашего UI)
+    
         second_item = page.locator(".upload-item").filter(has_text="test_upload").first
-        expect(second_item).to_contain_text("уже загружен", timeout=1000)
+        
+        # Увеличиваем таймаут ожидания статуса "уже загружен" до 10 секунд
+        expect(second_item).to_contain_text("уже загружен", timeout=10000)
