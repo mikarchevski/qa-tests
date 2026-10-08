@@ -1,6 +1,17 @@
-pytest
-playwright
+# === Основные зависимости ===
+playwright==1.47.0
+pytest==8.3.3
+pytest-playwright==0.5.2
 allure-pytest
-pytest-playwright
-python-dotenv
-Pillow
+
+# === Переменные окружения ===
+python-dotenv==1.0.1
+
+# === Генерация тестовых изображений ===
+Pillow==10.4.0
+
+# === Красивые отчеты ===
+allure-pytest==2.13.5
+
+# === API-тесты ===
+requests==2.32.3  # Раскомментируй, когда понадобятся отдельные API-тесты

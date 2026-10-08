@@ -3,13 +3,13 @@ venv/
 env/
 .venv/
 
-# Кэш Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# Pytest
+*.pyc
+*.pyo
 .pytest_cache/
 
 # Allure
