@@ -1,117 +1,102 @@
-# import pytest
-# from playwright.sync_api import Page, expect
-# import os
-# from dotenv import load_dotenv
+import os
+import pytest
+from playwright.sync_api import expect
+from Pages.upload_page import UploadPage
+from config import Config
+from pathlib import Path
 
-# load_dotenv()
-# BASE_URL = os.getenv("APP_URL", "http://localhost:5000")
+from conftest import upload_page
 
 
+# загрузка файла
+def test_successful_file_upload(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
+    upload_page.upload_single_file(str(temp_file))
+    # Проверяем статус в виджете загрузки
+    status = upload_page.get_upload_status("test_automation_file.txt")
+    expect(status).to_contain_text("Готово")
+    # Проверяем, что файл появился в общем списке
+    file_card = upload_page.get_file_in_list("test_automation_file.txt")
+    expect(file_card).to_be_visible()
 
 
-# class TestFileUpload:
-#     """Тесты загрузки файлов"""
-#     def test_upload_single_file(self, authenticated_page, temp_file, cleanup_uploaded_files):
-#         """
-#         Базовый тест: загрузка одного файла.
-#         Работает напрямую с нативным <input type="file">, без клика по кастомной кнопке.
-#         """
-#         page = authenticated_page
-        
-#         # 1. Получаем точное имя файла (например, "test_upload_1a2b3c4d.txt")
-#         file_name = temp_file.name 
+# повторная загрузка уже загруженного файла
+def test_re_upload_file(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
+    file_name = "test_automation_file.txt"
 
-#         # 2. Инициируем действие выбора файла (клик по кнопке)
-#         page.locator("[data-testid='upload-file-btn']").click()
-        
-#         # 3. Микро-задержка: даем JS 300мс обработать клик и подготовить инпут
-#         page.wait_for_timeout(1000)
+    # 1. ПЕРВАЯ ЗАГРУЗКА
+    upload_page.upload_single_file(str(temp_file))
 
-#         # 4. Устанавливаем файл напрямую в скрытый инпут
-#         file_input = page.locator("[data-testid='file-input']")
-#         file_input.set_input_files(str(temp_file))
+    # Ждем, пока первая загрузка точно завершится
+    status_first = upload_page.get_upload_status(file_name)
+    expect(status_first).to_contain_text("Готово")
+    #
+    # # 2. ВТОРАЯ ЗАГРУЗКА (того же самого файла)
+    upload_page.upload_single_file(str(temp_file))
+    status_second = upload_page.get_upload_status(file_name).first
+    expect(status_second).to_contain_text("уже загружен")
 
-#         # 5. Ожидаем появления элемента в панели загрузок
-#         upload_item = page.locator(".upload-item").filter(has_text=file_name)
-#         expect(upload_item).to_be_visible(timeout=10000)
 
-#         # 6. Ожидаем завершения загрузки 
-#         # (Если у вас в UI написано "Загружено" или "✅", замените "Готово" на этот текст)
-#         expect(upload_item).to_contain_text("Готово", timeout=15000)
+# Загрузка нескольких файлов
+def test_upload_multiple_files(
+        upload_page: UploadPage,
+        temp_files: list[Path],
+        cleanup_uploaded_files
+):
+    """Сценарий: загрузка нескольких файлов одновременно"""
+    upload_page.page.wait_for_load_state("networkidle")
 
-#         # 7. Проверяем, что файл появился в основной сетке файлов
-#         file_card = page.locator(".file-card").filter(has_text=file_name)
-#         expect(file_card).to_be_visible(timeout=10000)
+    # 1. Загружаем все 3 файла за один раз
+    upload_page.upload_multiple_files([str(p) for p in temp_files])
 
-#     def test_upload_multiple_files(self, authenticated_page, multiple_files, cleanup_uploaded_files):
-#         """Загрузка нескольких файлов одновременно"""
-#         page = authenticated_page
+    # 2. Проверяем, что каждый файл появился в виджете загрузки
+    for file_path in temp_files:
+        file_name = file_path.name
+        status = upload_page.get_upload_status(file_name)
+        expect(status).to_contain_text("Готово")
 
-#         page.locator("[data-testid='upload-file-btn']").click()
 
-#         page.wait_for_timeout(1000)
+# Загрузка каталога
+def test_upload_folder(upload_page: UploadPage, temp_folder: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
+    upload_page.upload_folder(str(temp_folder))
+    status = upload_page.get_upload_status(temp_folder.name)
+    expect(status).to_contain_text("Готово")
+    folder_exist = upload_page.get_file_in_list(str(temp_folder.name))
+    expect(folder_exist).to_be_visible()
 
-#         file_input = page.locator("[data-testid='file-input']")
-#         file_input.set_input_files([str(f) for f in multiple_files])
 
-#         # Проверяем, что все 3 файла появились в панели загрузок
-#         upload_items = page.locator(".upload-item")
-#         expect(upload_items).to_have_count(3, timeout=10000)
+# Удаление файла через UI
+def test_ui_delete(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
+    # 1. Загружаем файл
+    upload_page.upload_single_file(str(temp_file))
+    # 2. Ждем, пока файл появится в списке
+    file_card = upload_page.get_file_in_list(temp_file.name)
+    expect(file_card).to_be_visible()
+    # 3. Удаляем через UI
+    upload_page.delete_file_via_ui(temp_file.name)
 
-#         # Ждём, пока все загрузятся
-#         for file in multiple_files:
-#             item = page.locator(".upload-item").filter(has_text=file.stem)
-#             expect(item).to_contain_text("Готово", timeout=30000)
 
-#     def test_upload_folder(self, authenticated_page, tmp_path, cleanup_uploaded_files):
-#         """Загрузка папки через folderInput"""
-#         page = authenticated_page
+# Сценарий: проверка факта скачивания файла
+def test_download_file(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
 
-#         # Создаём структуру папки
-#         test_folder = tmp_path / "test_folder"
-#         test_folder.mkdir()
-#         (test_folder / "file1.txt").write_text("content 1")
-#         (test_folder / "file2.txt").write_text("content 2")
+    file_name = temp_file.name
 
-#         page.locator("[data-testid='upload-folder-btn']").click()
-#         page.wait_for_timeout(1000)
+    # 1. Загружаем файл
+    upload_page.upload_single_file(str(temp_file))
+    expect(upload_page.get_file_in_list(file_name)).to_be_visible()
 
-#         folder_input = page.locator("[data-testid='folder-input']")
-#         folder_input.set_input_files(str(test_folder))
+    # 2. Кликаем по файлу (выделяем его, чтобы появилась кнопка скачивания)
+    upload_page.get_file_in_list(file_name).click()
 
-#         # Проверяем, что папка появилась в панели загрузок
-#         folder_item = page.locator(".upload-item").filter(has_text="test_folder")
-#         expect(folder_item).to_be_visible(timeout=10000)
+    # 3. Перехватываем событие скачивания
+    with upload_page.page.expect_download() as download_info:
+        upload_page.download_button.click()
 
-#         # Ждём завершения загрузки папки
-#         expect(folder_item).to_contain_text("Готово", timeout=15000)
-
-#         file_card = page.locator(".file-card").filter(has_text="test_folder")
-#         expect(file_card).to_be_visible(timeout=10000)
-
-#     # def test_upload_duplicate_file(self, authenticated_page, temp_file, cleanup_uploaded_files):
-#     #     """Повторная загрузка того же файла"""
-#     #     page = authenticated_page
-    
-#     #     # Первая загрузка
-#     #     page.locator("[data-testid='upload-file-btn']").click()
-#     #     page.wait_for_timeout(500) # Небольшая пауза для открытия диалога
-#     #     page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-    
-#     #     first_item = page.locator(".upload-item").filter(has_text="test_upload").first
-        
-#     #     # Увеличиваем таймаут ожидания "Готово" до 10 секунд для медленного CI
-#     #     expect(first_item).to_contain_text("Готово", timeout=10000)
-    
-#     #     # ⚡ КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Даем БД время зафиксировать запись
-#     #     # 1 секунды в CI часто не хватает для SQLite
-#     #     page.wait_for_timeout(3000) 
-    
-#     #     # Вторая загрузка того же файла
-#     #     page.locator("[data-testid='upload-file-btn']").click()
-#     #     page.locator("[data-testid='file-input']").set_input_files(str(temp_file))
-    
-#     #     second_item = page.locator(".upload-item").filter(has_text="test_upload").first
-        
-#     #     # Увеличиваем таймаут ожидания статуса "уже загружен" до 10 секунд
-#     #     expect(second_item).to_contain_text("уже загружен", timeout=10000)
+    # 4. Проверяем факт скачивания
+    download = download_info.value
+    assert download.suggested_filename == file_name
+    assert download.failure() is None
