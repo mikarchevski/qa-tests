@@ -100,3 +100,12 @@ def test_download_file(upload_page: UploadPage, temp_file: Path, cleanup_uploade
     download = download_info.value
     assert download.suggested_filename == file_name
     assert download.failure() is None
+
+#Копирование ссылки на файл
+def test_copy_link(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
+    file_name = temp_file.name
+    upload_page.upload_single_file(str(temp_file))
+    expect(upload_page.get_file_in_list(file_name)).to_be_visible()
+    upload_page.copy_file_link(temp_file.name)
+    expect(upload_page.toast_message).to_be_visible()

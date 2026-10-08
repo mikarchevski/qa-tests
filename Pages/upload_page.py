@@ -16,6 +16,7 @@ class UploadPage:
         self.modal_window = page.get_by_test_id("modal-content")
         self.modal_window_confirm = page.get_by_test_id("confirm-delete-btn")
         self.modal_window_close = page.get_by_test_id("cancel-delete-btn")
+        self.toast_message = page.get_by_test_id("toast-message")
 
     def upload_single_file(self, file_path: str):
         """
@@ -56,6 +57,11 @@ class UploadPage:
 
         # 5. Ждем, пока файл исчезнет из списка
         expect(file_card).not_to_be_visible()
+
+    def copy_file_link(self, file_name: str):
+        file_card = self.get_file_in_list(file_name)
+        file_card.click()
+        self.copy_button.click()
 
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===
 
