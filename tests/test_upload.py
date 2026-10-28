@@ -66,6 +66,28 @@ def test_upload_folder(upload_page: UploadPage, temp_folder: Path, cleanup_uploa
     folder_exist = upload_page.get_file_in_list(str(temp_folder.name))
     expect(folder_exist).to_be_visible()
 
+# Загрузка изображения видео и проверка фильтрации файлов на странице
+def test_upload_img(upload_page: UploadPage, test_image: Path, test_video: Path, cleanup_uploaded_files):
+    upload_page.page.wait_for_load_state("networkidle")
+    # 1. Загружаем изображение и текстовый файл
+    upload_page.upload_multiple_files([str(test_image),str(test_video)])
+
+    # 2. Ждем, пока оба файла появятся в списке
+    expect(upload_page.get_file_in_list(test_image.name)).to_be_visible()
+    expect(upload_page.get_file_in_list(test_video.name)).to_be_visible()
+
+    # 3. Включаем фильтр "Фото"
+    upload_page.img_files_filter.click()
+
+    # 4. Проверяем: изображение видно, текстовый файл скрыт
+    expect(upload_page.get_file_in_list(test_image.name)).to_be_visible()
+    expect(upload_page.get_file_in_list(test_video.name)).not_to_be_visible()
+
+    upload_page.video_files_filter.click()
+
+    expect(upload_page.get_file_in_list(test_video.name)).to_be_visible()
+    expect(upload_page.get_file_in_list(test_image.name)).not_to_be_visible()
+
 
 # Удаление файла через UI
 def test_ui_delete(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):

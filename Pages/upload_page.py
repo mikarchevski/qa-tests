@@ -17,6 +17,10 @@ class UploadPage:
         self.modal_window_confirm = page.get_by_test_id("confirm-delete-btn")
         self.modal_window_close = page.get_by_test_id("cancel-delete-btn")
         self.toast_message = page.get_by_test_id("toast-message")
+        self.all_files_filter = page.get_by_test_id("filter-btn-all")
+        self.img_files_filter = page.get_by_test_id("filter-btn-image")
+        self.video_files_filter = page.get_by_test_id("filter-btn-video")
+        self.new_files_filter = page.get_by_test_id("filter-btn-new")
 
     def upload_single_file(self, file_path: str):
         """
@@ -62,6 +66,7 @@ class UploadPage:
         file_card = self.get_file_in_list(file_name)
         file_card.click()
         self.copy_button.click()
+
 
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===
 

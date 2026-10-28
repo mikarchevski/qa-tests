@@ -7,6 +7,10 @@ import uuid
 import os
 from datetime import datetime
 from pathlib import Path
+from PIL import Image
+import imageio.v3 as iio
+import numpy as np
+from moviepy.editor import ColorClip
 
 from Pages.upload_page import UploadPage
 from config import Config
@@ -217,3 +221,36 @@ def cleanup_uploaded_files(authenticated_page: Page):
                     print(f"  ❌ Ошибка удаления папки {folder_path}: HTTP {response.status} | {response.text()}")
             except Exception as e:
                 print(f"  ❌ Не удалось удалить папку {folder_path}: {e}")
+
+#Создание временной картинки
+@pytest.fixture
+def test_image(tmp_path: Path):
+    img = Image.new('RGB', (100,100), color='red')
+    import_path = tmp_path / 'image.png'
+    img.save(import_path)
+    yield import_path
+
+#Создание видео
+@pytest.fixture
+def test_video(tmp_path: Path) -> Path:
+    """
+    Фикстура: создает тестовое видео MP4 длительностью 1 секунда.
+    Видео — красный квадрат 100x100 пикселей.
+    """
+    video_path = tmp_path / "test_video.mp4"
+    
+    # Создаем красное видео 100x100 пикселей, длительностью 1 секунда
+    clip = ColorClip(size=(100, 100), color=(255, 0, 0), duration=1)
+    
+    # Записываем в файл (без звука, без логов)
+    clip.write_videofile(
+        str(video_path),
+        fps=30,
+        codec='libx264',
+        audio=False,
+        logger=None
+    )
+    
+    clip.close()
+    
+    yield video_path
