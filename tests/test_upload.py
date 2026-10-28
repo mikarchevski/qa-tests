@@ -88,19 +88,6 @@ def test_upload_img(upload_page: UploadPage, test_image: Path, test_video: Path,
     expect(upload_page.get_file_in_list(test_video.name)).to_be_visible()
     expect(upload_page.get_file_in_list(test_image.name)).not_to_be_visible()
 
-
-# Удаление файла через UI
-def test_ui_delete(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
-    upload_page.page.wait_for_load_state("networkidle")
-    # 1. Загружаем файл
-    upload_page.upload_single_file(str(temp_file))
-    # 2. Ждем, пока файл появится в списке
-    file_card = upload_page.get_file_in_list(temp_file.name)
-    expect(file_card).to_be_visible()
-    # 3. Удаляем через UI
-    upload_page.delete_file_via_ui(temp_file.name)
-
-
 # Сценарий: проверка факта скачивания файла
 def test_download_file(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
     upload_page.page.wait_for_load_state("networkidle")

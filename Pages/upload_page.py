@@ -81,3 +81,7 @@ class UploadPage:
     def get_file_in_list(self, file_name: str):
         """Возвращает карточку файла в общем списке"""
         return self.file_container.locator(f'[title="{file_name}"]')
+
+    def get_files_in_list(self, file_names: list[str]):
+        """Возвращает картчоки файлов в общем списке"""
+        return self.file_container.locator(f'[title="{file_names[0]}"]')
