@@ -10,9 +10,12 @@ class UploadPage:
         self.upload_folder_button = page.get_by_test_id("upload-folder-btn")
         self.file_container = page.get_by_test_id("files-list-container")
         self.upload_manager = page.get_by_test_id("upload-manager")
+        self.manage_panel = page.get_by_test_id("action-bar-content")
+        self.manage_panel_filename = page.get_by_test_id("action-file-name")
         self.delete_button = page.get_by_test_id("btn-delete")
         self.download_button = page.get_by_test_id("btn-download")
         self.copy_button = page.get_by_test_id("btn-copy-link")
+        self.manage_panel_close_button = page.get_by_test_id("btn-close-bar")
         self.modal_window = page.get_by_test_id("modal-content")
         self.modal_window_confirm = page.get_by_test_id("confirm-delete-btn")
         self.modal_window_close = page.get_by_test_id("cancel-delete-btn")
@@ -62,10 +65,18 @@ class UploadPage:
         # 5. Ждем, пока файл исчезнет из списка
         expect(file_card).not_to_be_visible()
 
+    def bulk_delete_file_via_ui(self, file_names: list[str]):
+        for file_name in file_names:
+            self.delete_file_via_ui(file_name)
+
+
     def copy_file_link(self, file_name: str):
         file_card = self.get_file_in_list(file_name)
         file_card.click()
         self.copy_button.click()
+
+    def click_file(self, file_name: str):
+        self.get_file_in_list(file_name).click()
 
 
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===

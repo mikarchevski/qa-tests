@@ -19,7 +19,6 @@ def test_successful_file_upload(upload_page: UploadPage, temp_file: Path, cleanu
     file_card = upload_page.get_file_in_list("test_automation_file.txt")
     expect(file_card).to_be_visible()
 
-
 # повторная загрузка уже загруженного файла
 def test_re_upload_file(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
     upload_page.page.wait_for_load_state("networkidle")
