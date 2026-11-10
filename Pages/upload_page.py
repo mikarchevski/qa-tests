@@ -1,5 +1,7 @@
 from playwright.sync_api import Page, expect
 
+from config import Config
+
 
 class UploadPage:
     def __init__(self, page: Page):
@@ -25,6 +27,11 @@ class UploadPage:
         self.video_files_filter = page.get_by_test_id("filter-btn-video")
         self.new_files_filter = page.get_by_test_id("filter-btn-new")
 
+    def open(self):
+        self.page.goto(Config.BASE_URL)
+        self.page.wait_for_load_state("networkidle")
+        return self
+
     def upload_single_file(self, file_path: str):
         """
         Принудительная загрузка файла, обходящая ограничения кастомных UI-компонентов.
@@ -36,6 +43,8 @@ class UploadPage:
 
         # 2. Вставляем файл
         input_el.set_input_files(file_path)
+
+
 
     def upload_multiple_files(self, file_paths: list[str]):
         """
@@ -78,6 +87,9 @@ class UploadPage:
     def click_file(self, file_name: str):
         self.get_file_in_list(file_name).click()
 
+    def upload_single_file_and_click(self, file_path: str):
+        self.upload_single_file(file_path)
+        self.click_file(file_path)
 
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===
 
