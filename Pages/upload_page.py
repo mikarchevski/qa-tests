@@ -27,6 +27,14 @@ class UploadPage:
         self.video_files_filter = page.get_by_test_id("filter-btn-video")
         self.new_files_filter = page.get_by_test_id("filter-btn-new")
 
+        #Меню пользователя
+        self.user_menu_btn = page.get_by_test_id("user-menu-wrapper")
+        self.user_menu = page.get_by_test_id("user-dropdown")
+        self.user_menu_uname = page.get_by_test_id("dropdown-username")
+        self.user_menu_theme_toggle = page.get_by_test_id("theme-toggle-btn")
+        self.user_menu_logout_btn = page.get_by_test_id("logout-link")
+
+
     def open(self):
         self.page.goto(Config.BASE_URL)
         self.page.wait_for_load_state("networkidle")
@@ -91,6 +99,28 @@ class UploadPage:
         self.upload_single_file(file_path)
         self.click_file(file_path)
 
+    def open_user_menu(self):
+        self.user_menu_btn.click()
+        expect(self.user_menu).to_be_visible()
+
+    def get_current_theme(self) -> str:
+        """Отладочный метод: показывает, что реально видит Playwright"""
+
+        # 1. Печатаем открывающий тег HTML
+        html_tag = self.page.locator("html").evaluate("el => el.outerHTML.split('>')[0] + '>'")
+        print(f"\n🔍 [DEBUG] Тег HTML: {html_tag}")
+
+        # 2. Печатаем открывающий тег BODY (на всякий случай)
+        body_tag = self.page.locator("body").evaluate("el => el.outerHTML.split('>')[0] + '>'")
+        print(f"🔍 [DEBUG] Тег BODY: {body_tag}")
+
+        # 3. Пытаемся получить атрибут
+        theme = self.page.evaluate("document.documentElement.getAttribute('data-theme')")
+        print(f"🔍 [DEBUG] Значение data-theme: '{theme}'\n")
+
+        return theme
+
+        return theme
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===
 
     def get_upload_widget(self, file_name: str):
