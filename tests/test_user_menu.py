@@ -15,6 +15,17 @@ def test_user_menu_uname(upload_page: UploadPage):
     upload_page.open()
     upload_page.open_user_menu()
 
+def test_close_user_menu(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.open_user_menu()
+    upload_page.file_container.click()
+    expect(upload_page.user_menu).not_to_be_visible()
+
+def test_hover_user_menu(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.user_menu_btn.hover()
+    expect(upload_page.user_menu_btn).to_have_css("border-color", "rgb(59, 130, 246)")
+
 # Проверка корректности отображения имени пользователя в меню
 def test_user_name_isavailable(upload_page: UploadPage):
     upload_page.open()

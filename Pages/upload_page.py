@@ -28,11 +28,12 @@ class UploadPage:
         self.new_files_filter = page.get_by_test_id("filter-btn-new")
 
         #Меню пользователя
-        self.user_menu_btn = page.get_by_test_id("user-menu-wrapper")
+        self.user_menu_wrapper = page.get_by_test_id("user-menu-wrapper")
         self.user_menu = page.get_by_test_id("user-dropdown")
         self.user_menu_uname = page.get_by_test_id("dropdown-username")
         self.user_menu_theme_toggle = page.get_by_test_id("theme-toggle-btn")
         self.user_menu_logout_btn = page.get_by_test_id("logout-link")
+        self.user_menu_btn = page.get_by_test_id("user-menu-btn")
 
 
     def open(self):
@@ -108,16 +109,12 @@ class UploadPage:
 
         # 1. Печатаем открывающий тег HTML
         html_tag = self.page.locator("html").evaluate("el => el.outerHTML.split('>')[0] + '>'")
-        print(f"\n🔍 [DEBUG] Тег HTML: {html_tag}")
 
         # 2. Печатаем открывающий тег BODY (на всякий случай)
         body_tag = self.page.locator("body").evaluate("el => el.outerHTML.split('>')[0] + '>'")
-        print(f"🔍 [DEBUG] Тег BODY: {body_tag}")
 
         # 3. Пытаемся получить атрибут
         theme = self.page.evaluate("document.documentElement.getAttribute('data-theme')")
-        print(f"🔍 [DEBUG] Значение data-theme: '{theme}'\n")
-
         return theme
 
         return theme
