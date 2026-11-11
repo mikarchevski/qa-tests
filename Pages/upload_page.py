@@ -7,6 +7,8 @@ class UploadPage:
     def __init__(self, page: Page):
         self.page = page
         self.upload_input = page.get_by_test_id("file-input")
+        self.upload_file_count = page.get_by_test_id("file-count")
+        self.page_title = page.get_by_test_id("files-title")
         self.upload_folder_input = page.get_by_test_id("folder-input")
         self.upload_file_button = page.get_by_test_id("upload-file-btn")
         self.upload_folder_button = page.get_by_test_id("upload-folder-btn")
@@ -40,6 +42,12 @@ class UploadPage:
         self.page.goto(Config.BASE_URL)
         self.page.wait_for_load_state("networkidle")
         return self
+
+    @property
+    def all_filter_buttons(self):
+        """Возвращает локатор всех кнопок фильтров сразу"""
+        # Селектор ^= означает "начинается с"
+        return self.page.locator("[data-testid^='filter-btn']")
 
     def upload_single_file(self, file_path: str):
         """

@@ -26,6 +26,13 @@ def test_hover_user_menu(upload_page: UploadPage):
     upload_page.user_menu_btn.hover()
     expect(upload_page.user_menu_btn).to_have_css("border-color", "rgb(59, 130, 246)")
 
+def test_user_menu_el_hover(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.open_user_menu()
+    upload_page.user_menu_logout_btn.hover()
+    expect(upload_page.user_menu_logout_btn).to_have_css("color", "rgb(220, 38, 38)")
+
+
 # Проверка корректности отображения имени пользователя в меню
 def test_user_name_isavailable(upload_page: UploadPage):
     upload_page.open()

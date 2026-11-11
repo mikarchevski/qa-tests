@@ -8,6 +8,9 @@ from pathlib import Path
 from conftest import upload_page
 
 
+def test_empty_page(upload_page: UploadPage):
+    upload_page.open()
+    expect(upload_page.file_container).to_contain_text("Здесь пока пусто")
 # загрузка файла
 def test_successful_file_upload(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
     upload_page.page.wait_for_load_state("networkidle")
@@ -18,6 +21,23 @@ def test_successful_file_upload(upload_page: UploadPage, temp_file: Path, cleanu
     # Проверяем, что файл появился в общем списке
     file_card = upload_page.get_file_in_list("test_automation_file.txt")
     expect(file_card).to_be_visible()
+
+def test_change_file_counter(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.open()
+    upload_page.upload_single_file(str(temp_file))
+    expect(upload_page.upload_file_count).to_contain_text("1")
+
+@pytest.mark.skip(reason="BUG: нет дата-тест-ид")
+def test_breadcrumbs_isavailable(upload_page: UploadPage):
+    upload_page.open()
+
+def test_title_isavailable(upload_page: UploadPage):
+    upload_page.open()
+    expect(upload_page.page_title).to_be_visible()
+
+def test_filter_button_isavailable(upload_page: UploadPage):
+    upload_page.open()
+    expect(upload_page.all_filter_buttons).to_have_count(4)
 
 # повторная загрузка уже загруженного файла
 def test_re_upload_file(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
