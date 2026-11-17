@@ -6,8 +6,10 @@ from config import Config
 class UploadPage:
     def __init__(self, page: Page):
         self.page = page
+        self.page_title = page.get_by_test_id("sidebar-title")
         self.upload_input = page.get_by_test_id("file-input")
         self.upload_file_count = page.get_by_test_id("file-count")
+        self.sorting_menu = page.get_by_test_id("sort-dropdown-btn")
         self.page_title = page.get_by_test_id("files-title")
         self.upload_folder_input = page.get_by_test_id("folder-input")
         self.upload_file_button = page.get_by_test_id("upload-file-btn")
@@ -126,6 +128,11 @@ class UploadPage:
         return theme
 
         return theme
+
+    def logout(self):
+        self.open_user_menu()
+        self.user_menu_logout_btn.click()
+        expect(self.page).to_have_url(Config.BASE_URL + "/login")
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===
 
     def get_upload_widget(self, file_name: str):

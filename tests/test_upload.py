@@ -1,19 +1,28 @@
 import os
 import pytest
 from playwright.sync_api import expect
+
+from Pages.login_page import LoginPage
 from Pages.upload_page import UploadPage
 from config import Config
 from pathlib import Path
 
 from conftest import upload_page
 
+def test_check_page_title(upload_page: UploadPage):
+    upload_page.open()
+    expect(upload_page.page_title).to_be_visible()
+    expect(upload_page.page_title).to_contain_text("Диск")
 
 def test_empty_page(upload_page: UploadPage):
     upload_page.open()
     expect(upload_page.file_container).to_contain_text("Здесь пока пусто")
+def test_sorting_menu(upload_page: UploadPage):
+    upload_page.open()
+    expect(upload_page.sorting_menu).to_be_visible()
 # загрузка файла
 def test_successful_file_upload(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
-    upload_page.page.wait_for_load_state("networkidle")
+    upload_page.open()
     upload_page.upload_single_file(str(temp_file))
     # Проверяем статус в виджете загрузки
     status = upload_page.get_upload_status("test_automation_file.txt")
@@ -137,3 +146,22 @@ def test_copy_link(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_fi
     expect(upload_page.get_file_in_list(file_name)).to_be_visible()
     upload_page.copy_file_link(temp_file.name)
     expect(upload_page.toast_message).to_be_visible()
+
+def test_reload_page(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.open()
+    upload_page.upload_single_file(str(temp_file))
+    expect(upload_page.get_file_in_list(temp_file.name)).to_be_visible()
+    upload_page.page.reload()
+    expect(upload_page.get_file_in_list(temp_file.name)).to_be_visible()
+
+def test_relogin(login_page:LoginPage, upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
+    upload_page.open()
+    upload_page.upload_single_file(str(temp_file))
+    expect(upload_page.get_file_in_list(temp_file.name)).to_be_visible()
+    upload_page.logout()
+    login_page.fill_login(Config.TEST_USERNAME, Config.TEST_PASSWORD)
+    login_page.send_login_form()
+    expect(login_page.page).to_have_url(Config.BASE_URL + "/")
+
+    # 4. Проверяем, что файл на месте
+    expect(upload_page.get_file_in_list(temp_file.name)).to_be_visible()
