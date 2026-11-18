@@ -126,7 +126,7 @@ def temp_folder(tmp_path):
 
 
 @pytest.fixture(scope="function")
-def cleanup_uploaded_files(authenticated_page: Page):
+def cleanup_uploaded_files(authenticated_page: Page, api_auth_headers: dict):
     """
     Автоматически удаляет ТОЛЬКО те файлы и папки, которые были загружены во время теста.
     Использует дельта-подход для максимальной безопасности и скорости.
@@ -148,19 +148,15 @@ def cleanup_uploaded_files(authenticated_page: Page):
     # 🔥 Здесь выполняется сам тест
     yield
 
-    # 3. После теста собираем текущие short_id файлов
+    # 3-5. (Код сбора new_file_ids и new_folder_paths остаётся без изменений)
     current_file_ids = set(page.evaluate("""
                                          () => Array.from(document.querySelectorAll('.file-card[data-short-id]'))
                                              .map(el => el.getAttribute('data-short-id'))
                                          """))
-
-    # 4. После теста собираем текущие пути папок
     current_folder_paths = set(page.evaluate("""
                                              () => Array.from(document.querySelectorAll('.file-card[data-folder-path]'))
                                                  .map(el => el.getAttribute('data-folder-path'))
                                              """))
-
-    # 5. Находим НОВЫЕ файлы и папки (разница множеств)
     new_file_ids = current_file_ids - existing_file_ids
     new_folder_paths = current_folder_paths - existing_folder_paths
 
@@ -168,59 +164,11 @@ def cleanup_uploaded_files(authenticated_page: Page):
         print("\n✨ [CLEANUP] Новых файлов и папок не обнаружено, очистка не требуется")
         return
 
-    # 6. Получаем CSRF-токен (из meta-тега или куки)
-    csrf_token = page.evaluate("""
-                               () => {
-                                   const meta = document.querySelector('meta[name="csrf-token"]');
-                                   return meta ? meta.content : null;
-                               }
-                               """)
-
-    if not csrf_token:
-        cookies = page.context.cookies()
-        csrf_cookie = next((c for c in cookies if c['name'] in ['csrf_token', 'csrftoken', '_csrf_token']), None)
-        if csrf_cookie:
-            csrf_token = csrf_cookie['value']
-
+    # 6. 🔥 ИСПОЛЬЗУЕМ ГОТОВУЮ ФИКСТУРУ ВМЕСТО ДУБЛИРОВАНИЯ
     headers = {"Content-Type": "application/json"}
-    if csrf_token:
-        headers["X-CSRFToken"] = csrf_token
-        print(f"\n🔑 [CLEANUP] CSRF-токен найден")
-    else:
-        print("\n⚠️ [CLEANUP] CSRF-токен не найден, пробуем без него")
+    headers.update(api_auth_headers)  # Добавляем CSRF-токен из фикстуры
 
-    # 7. Удаляем новые файлы (через DELETE, как требует бэкенд)
-    if new_file_ids:
-        print(f"\n🧹 [CLEANUP] Удаляю {len(new_file_ids)} тестовых файлов...")
-        for short_id in new_file_ids:
-            try:
-                response = page.request.delete(
-                    f"{Config.BASE_URL}/api/delete/{short_id}",
-                    headers=headers
-                )
-                if response.ok:
-                    print(f"  ✅ Удалён файл: {short_id}")
-                else:
-                    print(f"  ❌ Ошибка удаления файла {short_id}: HTTP {response.status} | {response.text()}")
-            except Exception as e:
-                print(f"  ❌ Не удалось удалить файл {short_id}: {e}")
-
-    # 8. Удаляем новые папки (через POST bulk, как требует бэкенд)
-    if new_folder_paths:
-        print(f"\n🧹 [CLEANUP] Удаляю {len(new_folder_paths)} тестовых папок...")
-        for folder_path in new_folder_paths:
-            try:
-                response = page.request.post(
-                    f"{Config.BASE_URL}/api/delete/bulk",
-                    headers=headers,
-                    data={"folder_path": folder_path}  # 🔥 Важно: data, а не json
-                )
-                if response.ok:
-                    print(f"  ✅ Удалена папка: {folder_path}")
-                else:
-                    print(f"  ❌ Ошибка удаления папки {folder_path}: HTTP {response.status} | {response.text()}")
-            except Exception as e:
-                print(f"  ❌ Не удалось удалить папку {folder_path}: {e}")
+    print(f"\n🔑 [CLEANUP] CSRF-токен добавлен из фикстуры")
 
 #Создание временной картинки
 @pytest.fixture
@@ -254,3 +202,27 @@ def test_video(tmp_path: Path) -> Path:
     clip.close()
     
     yield video_path
+
+@pytest.fixture
+def api_request(authenticated_page: Page):
+    """
+    Возвращает объект Playwright Request с уже авторизованным контекстом.
+    Позволяет делать API-запросы так, как будто их делает залогиненный пользователь.
+    """
+    return authenticated_page.request
+
+
+@pytest.fixture
+def api_auth_headers(authenticated_page: Page) -> dict:
+    """
+    Возвращает словарь заголовков с CSRF-токеном для API-запросов.
+    Автоматически извлекает токен из кук авторизованной сессии.
+    """
+    cookies = authenticated_page.context.cookies()
+    csrf_cookie = next((c for c in cookies if c["name"] == "csrf_token"), None)
+
+    headers = {}
+    if csrf_cookie:
+        headers["X-CSRFToken"] = csrf_cookie["value"]
+
+    return headers
