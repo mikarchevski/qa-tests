@@ -18,23 +18,30 @@ def test_ui_delete(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_fi
     # 3. Удаляем через UI
     upload_page.delete_file_via_ui(temp_file.name)
 
+
 def test_ui_delete_several_files(upload_page: UploadPage, temp_files: list[Path], cleanup_uploaded_files):
-    upload_page.page.wait_for_load_state("networkidle")
+    upload_page.open()
     upload_page.upload_multiple_files([str(p) for p in temp_files])
+
     file_names = [p.name for p in temp_files]
     for name in file_names:
         expect(upload_page.get_file_in_list(name)).to_be_visible()
+
     files_to_delete = file_names[:2]
     file_to_keep = file_names[2]
 
     for file_name in files_to_delete:
         upload_page.delete_file_via_ui(file_name)
+        # Проверяем, что оставшиеся файлы всё ещё видны и не "дёргаются"
+        if file_name != files_to_delete[-1]:  # Не ждём после последнего удаления
+            upload_page.page.wait_for_function(
+                f"document.querySelectorAll('.file-card').length === {len(file_names) - files_to_delete.index(file_name) - 1}",
+                timeout=3000
+            )
 
-    # 4. Проверяем, что удаленные файлы исчезли
+    # Проверяем результат
     for file_name in files_to_delete:
         expect(upload_page.get_file_in_list(file_name)).not_to_be_visible()
-
-    # 5. Проверяем, что третий файл остался
     expect(upload_page.get_file_in_list(file_to_keep)).to_be_visible()
 
 @pytest.mark.skip(reason="BUG: каталог криво загружается и соотвественно не удаляется ")

@@ -11,15 +11,43 @@ from conftest import upload_page
 
 def test_check_page_title(upload_page: UploadPage):
     upload_page.open()
-    expect(upload_page.page_title).to_be_visible()
-    expect(upload_page.page_title).to_contain_text("Диск")
+    expect(upload_page.side_title).to_be_visible()
+    expect(upload_page.side_title).to_contain_text("Диск")
 
 def test_empty_page(upload_page: UploadPage):
     upload_page.open()
     expect(upload_page.file_container).to_contain_text("Здесь пока пусто")
+
 def test_sorting_menu(upload_page: UploadPage):
     upload_page.open()
-    expect(upload_page.sorting_menu).to_be_visible()
+    expect(upload_page.sort_button).to_be_visible()
+
+def test_show_sorting_menu(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.open_sort_menu()
+
+def test_sorting_menu_iscontain_labels(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.open_sort_menu()
+    expect(upload_page.sort_option_label).to_be_visible()
+    expect(upload_page.sort_order_label).to_be_visible()
+
+def test_save_sort_options(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.open_sort_menu()
+    upload_page.sort_by_type.click()
+    upload_page.file_container.click()
+    expect(upload_page.sort_button_text).to_contain_text("Типу")
+    expect(upload_page.sort_by_type).to_have_class("sort-option active")
+
+def test_save_sorting_order(upload_page: UploadPage):
+    upload_page.open()
+    upload_page.open_sort_menu()
+    upload_page.sort_order_desc.click()
+    expect(upload_page.sort_button_text).to_contain_text("убыванию")
+    upload_page.open_sort_menu()
+    expect(upload_page.sort_order_desc).to_have_class("sort-order-btn active")
+
 # загрузка файла
 def test_successful_file_upload(upload_page: UploadPage, temp_file: Path, cleanup_uploaded_files):
     upload_page.open()

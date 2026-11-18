@@ -6,10 +6,9 @@ from config import Config
 class UploadPage:
     def __init__(self, page: Page):
         self.page = page
-        self.page_title = page.get_by_test_id("sidebar-title")
+        self.side_title = page.get_by_test_id("sidebar-title")
         self.upload_input = page.get_by_test_id("file-input")
         self.upload_file_count = page.get_by_test_id("file-count")
-        self.sorting_menu = page.get_by_test_id("sort-dropdown-btn")
         self.page_title = page.get_by_test_id("files-title")
         self.upload_folder_input = page.get_by_test_id("folder-input")
         self.upload_file_button = page.get_by_test_id("upload-file-btn")
@@ -38,6 +37,20 @@ class UploadPage:
         self.user_menu_theme_toggle = page.get_by_test_id("theme-toggle-btn")
         self.user_menu_logout_btn = page.get_by_test_id("logout-link")
         self.user_menu_btn = page.get_by_test_id("user-menu-btn")
+
+        #Меню сортировки
+        self.sort_button = page.get_by_test_id("sort-dropdown-btn")
+        self.sort_menu = page.get_by_test_id("sort-menu")
+        self.sort_button_text = page.get_by_test_id("btn-sort-text")
+        self.sort_option_label = page.get_by_test_id("sort-label")
+        self.sort_by_date = page.get_by_test_id("sort-option-date")
+        self.sort_by_name = page.get_by_test_id("sort-option-name")
+        self.sort_by_size = page.get_by_test_id("sort-option-size")
+        self.sort_by_type = page.get_by_test_id("sort-option-type")
+        self.sort_divider = page.get_by_test_id("sort-divider")
+        self.sort_order_label = page.get_by_test_id("sort-order-label")
+        self.sort_order_desc = page.get_by_test_id("sort-order-desc")
+        self.sort_order_asc = page.get_by_test_id("sort-order-asc")
 
 
     def open(self):
@@ -92,6 +105,7 @@ class UploadPage:
 
         # 5. Ждем, пока файл исчезнет из списка
         expect(file_card).not_to_be_visible()
+        self.page.wait_for_timeout(300)
 
     def bulk_delete_file_via_ui(self, file_names: list[str]):
         for file_name in file_names:
@@ -133,6 +147,10 @@ class UploadPage:
         self.open_user_menu()
         self.user_menu_logout_btn.click()
         expect(self.page).to_have_url(Config.BASE_URL + "/login")
+
+    def open_sort_menu(self):
+        self.sort_button.click()
+        expect(self.sort_menu).to_be_visible()
     # === ЛОКАТОРЫ (тест сам решает, что проверять) ===
 
     def get_upload_widget(self, file_name: str):
