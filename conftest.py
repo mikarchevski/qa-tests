@@ -170,6 +170,46 @@ def cleanup_uploaded_files(authenticated_page: Page, api_auth_headers: dict):
 
     print(f"\n🔑 [CLEANUP] CSRF-токен добавлен из фикстуры")
 
+
+@pytest.fixture(scope="function")
+def api_cleanup_files(authenticated_page: Page, api_auth_headers):
+    """
+    Автоматически удаляет файлы, созданные во время API-теста.
+    Работает на уровне бэкенда, не завися от UI/DOM.
+    """
+    # 1. Запоминаем ID файлов ДО теста
+    response_before = authenticated_page.request.get(
+        f"{Config.BASE_URL}/api/files?per_page=100",
+        headers=api_auth_headers
+    )
+    ids_before = {f["short_id"] for f in response_before.json().get("files", [])}
+
+    yield
+
+    # 2. Запоминаем ID файлов ПОСЛЕ теста
+    response_after = authenticated_page.request.get(
+        f"{Config.BASE_URL}/api/files?per_page=100",
+        headers=api_auth_headers
+    )
+    ids_after = {f["short_id"] for f in response_after.json().get("files", [])}
+
+    # 3. Находим новые файлы (дельта)
+    new_file_ids = list(ids_after - ids_before)
+
+    if not new_file_ids:
+        return  # Нечего удалять
+
+    # 4. Удаляем их через массовое удаление (bulk delete)
+    delete_resp = authenticated_page.request.post(
+        f"{Config.BASE_URL}/api/delete/bulk",
+        headers=api_auth_headers,
+        data={"short_ids": new_file_ids}
+    )
+
+    # Можно добавить проверку, чтобы убедиться, что очистка прошла успешно
+    if not delete_resp.ok:
+        print(f"⚠️ [CLEANUP] Не удалось удалить тестовые файлы: {delete_resp.text()}")
+
 #Создание временной картинки
 @pytest.fixture
 def test_image(tmp_path: Path):
